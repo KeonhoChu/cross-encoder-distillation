@@ -1,0 +1,24 @@
+# PyTorch and Deep Learning
+torch>=2.0.0
+transformers>=4.30.0
+sentence-transformers>=2.2.0
+
+# Parameter-Efficient Fine-Tuning (LoRA)
+peft>=0.4.0
+
+# Data Processing
+pandas>=1.5.0
+numpy>=1.23.0
+
+# Machine Learning Utilities
+scikit-learn>=1.2.0
+
+# Visualization
+matplotlib>=3.6.0
+
+# Progress Bars
+tqdm>=4.65.0
+
+# Standard libraries (usually included, but listed for completeness)
+# json, os, argparse, typing, dataclasses, subprocess, time, re, sys, signal
+

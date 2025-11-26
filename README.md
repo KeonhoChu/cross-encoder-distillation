@@ -1,6 +1,60 @@
 # Cross-Encoder → Bi-Encoder 지식 증류 파이프라인
 <img width="1577" height="779" alt="image" src="https://github.com/user-attachments/assets/0561e95d-813d-47cf-acab-4b6371df376f" />
 
+```mermaid
+flowchart TD
+    %% Styles
+    classDef data fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+    classDef model fill:#fff3e0,stroke:#ff6f00,stroke-width:2px;
+    classDef process fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
+    classDef loss fill:#ffebee,stroke:#c62828,stroke-width:2px;
+
+    %% Data Input
+    subgraph Input_Data [Input Data Processing]
+        Q["Query"]:::data
+        Docs["Candidate Documents<br/>(Positive + Hard Negatives)"]:::data
+        Q --> Pairs
+        Docs --> Pairs
+        Pairs["Query-Doc Pairs"]:::process
+    end
+
+    %% Teacher Model (Cross-Encoder)
+    subgraph Teacher_Branch [Teacher: Cross-Encoder]
+        CE["Cross-Encoder Model<br/>(e.g., xlm-roberta / e5-large)"]:::model
+        Pairs --> CE
+        CE --> |Forward Pass| Logits
+        Logits --> |Sigmoid| T_Scores["Teacher Scores<br/>(Soft Labels)"]:::data
+    end
+
+    %% Student Model (Bi-Encoder)
+    subgraph Student_Branch [Student: Bi-Encoder]
+        BE["Bi-Encoder Model<br/>(e.g., embeddinggemma-300m)"]:::model
+        Q --> |Tokenize| Q_Tok["Query Tokens"]
+        Docs --> |Tokenize| D_Tok["Doc Tokens"]
+        
+        Q_Tok --> BE
+        D_Tok --> BE
+        
+        BE --> |Pooling| Q_Emb["Query Embedding"]:::data
+        BE --> |Pooling| D_Emb["Doc Embeddings"]:::data
+        
+        Q_Emb & D_Emb --> CosSim["Cosine Similarity"]:::process
+        CosSim --> S_Scores["Student Scores"]:::data
+    end
+
+    %% Loss Calculation
+    subgraph Loss_Function [Loss Calculation]
+        T_Scores & S_Scores --> KL["KL Divergence Loss<br/>(Distill Knowledge)"]:::loss
+        
+        S_Scores --> Contrastive["Contrastive Loss<br/>(Margin between Pos/Neg)"]:::loss
+        
+        S_Scores --> NegPenalty["Negative Penalty<br/>(Suppress High Neg Scores)"]:::loss
+        
+        KL & Contrastive & NegPenalty --> TotalLoss["Total Loss"]:::loss
+    end
+
+    TotalLoss --> |Backprop| BE
+```
 ## 개요
 Cross-Encoder Teacher의 지식을 Bi-Encoder Student에게 전달하는 지식 증류 시스템
 - **1단계**: Cross-Encoder Teacher 학습 (관련성 점수 학습)

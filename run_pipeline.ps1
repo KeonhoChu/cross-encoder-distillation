@@ -16,7 +16,7 @@ param (
     [ValidateSet("quick", "full")]
     [string]$Mode = "quick",
 
-    [string]$GpuDevice = "7"
+    [string]$GpuDevice = "0"
 )
 
 $ErrorActionPreference = "Stop"

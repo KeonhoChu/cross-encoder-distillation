@@ -3,10 +3,10 @@
 # Cross-Encoder to Bi-Encoder Knowledge Distillation Pipeline Runner
 # Runs the full training pipeline: Teacher Training -> Student Training -> Evaluation.
 # Usage: ./run_pipeline.sh [quick|full] [gpu_device]
-# Default mode is 'quick', default gpu is '7'.
+# Default mode is 'quick', default gpu is '0'.
 
 MODE=${1:-quick}
-GPU_DEVICE=${2:-7}
+GPU_DEVICE=${2:-0}
 PYTHON="python" # Or path to specific python executable
 
 # Set GPU Device

@@ -21,6 +21,15 @@ echo -e "${CYAN}============================================================${NC
 echo -e "${CYAN}Starting Pipeline in [${MODE}] mode on GPU [${GPU_DEVICE}]${NC}"
 echo -e "${CYAN}============================================================${NC}"
 
+# Debug: Check GPU visibility
+echo -e "\n${YELLOW}[Debug] Checking GPU visibility (nvidia-smi):${NC}"
+if command -v nvidia-smi &> /dev/null; then
+    nvidia-smi
+else
+    echo "nvidia-smi not found"
+fi
+echo -e "${YELLOW}[Debug] CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES${NC}\n"
+
 if [ "$MODE" == "quick" ]; then
     # --- Quick Mode Configuration ---
     TEACHER_DIR="./models/cross_encoder_teacher_quick"

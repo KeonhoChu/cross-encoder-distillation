@@ -276,8 +276,12 @@ def train(args):
     print("Cross-Encoder → Bi-Encoder 지식 증류 학습")
     print("=" * 60)
     
-    device = torch.device(args.device if torch.cuda.is_available() else 'cpu')
-    print(f"[장치] {device}")
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
+        print(f"[장치] {device} ({torch.cuda.get_device_name(0)})")
+    else:
+        device = torch.device('cpu')
+        print(f"[장치] {device} (GPU not available)")
     
     # 데이터 로드
     data_dir = f"preprocessed/{args.data_version}"

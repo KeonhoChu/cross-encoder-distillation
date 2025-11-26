@@ -160,10 +160,12 @@ def train(model_name: str, data_version: str, output_dir: str, epochs: int = 3,
     print(f"[검증 데이터] {len(val_triplets)}개 triplet")
     
     # 장치 설정
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"[장치] {device}")
     if torch.cuda.is_available():
-        print(f"[GPU] {torch.cuda.get_device_name(0)}")
+        device = torch.device('cuda')
+        print(f"[장치] {device} ({torch.cuda.get_device_name(0)})")
+    else:
+        device = torch.device('cpu')
+        print(f"[장치] {device} (GPU not available)")
     
     # 토크나이저 및 모델 초기화
     tokenizer = AutoTokenizer.from_pretrained(model_name)

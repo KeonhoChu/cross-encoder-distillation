@@ -4,6 +4,10 @@ FROM pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime
 # Set working directory
 WORKDIR /app
 
+# Environment variables for NVIDIA GPU support
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \

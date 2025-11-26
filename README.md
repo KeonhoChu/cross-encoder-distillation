@@ -1,4 +1,5 @@
 # Cross-Encoder → Bi-Encoder 지식 증류 파이프라인
+<img width="1577" height="779" alt="image" src="https://github.com/user-attachments/assets/0561e95d-813d-47cf-acab-4b6371df376f" />
 
 ## 개요
 Cross-Encoder Teacher의 지식을 Bi-Encoder Student에게 전달하는 지식 증류 시스템

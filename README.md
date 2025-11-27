@@ -2,7 +2,7 @@
 <img width="1577" height="779" alt="image" src="https://github.com/user-attachments/assets/0561e95d-813d-47cf-acab-4b6371df376f" />
 
 ```mermaid
-graph TD
+graph LR
     %% Styles
     classDef data fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:black;
     classDef model fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:black;

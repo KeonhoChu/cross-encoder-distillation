@@ -2,59 +2,90 @@
 <img width="1577" height="779" alt="image" src="https://github.com/user-attachments/assets/0561e95d-813d-47cf-acab-4b6371df376f" />
 
 ```mermaid
-flowchart TD
+graph TD
     %% Styles
-    classDef data fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
-    classDef model fill:#fff3e0,stroke:#ff6f00,stroke-width:2px;
-    classDef process fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
-    classDef loss fill:#ffebee,stroke:#c62828,stroke-width:2px;
+    classDef data fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:black;
+    classDef model fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:black;
+    classDef process fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:black;
+    classDef loss fill:#ffebee,stroke:#b71c1c,stroke-width:2px,color:black;
 
-    %% Data Input
-    subgraph Input_Data [Input Data Processing]
-        Q["Query"]:::data
-        Docs["Candidate Documents<br/>(Positive + Hard Negatives)"]:::data
-        Q --> Pairs
-        Docs --> Pairs
-        Pairs["Query-Doc Pairs"]:::process
+    %% Data Preparation
+    subgraph DataPrep [Data Preparation Phase]
+        direction TB
+        RawData["Labeled Triplets (Query, Pos, Neg)"]:::data
+        HN_Mining["Hard Negative Mining (Add random negatives from dataset)"]:::process
+        BatchData["Training Batch (Query, Docs)"]:::data
+        
+        RawData --> HN_Mining
+        HN_Mining --> BatchData
     end
 
-    %% Teacher Model (Cross-Encoder)
-    subgraph Teacher_Branch [Teacher: Cross-Encoder]
-        CE["Cross-Encoder Model<br/>(e.g., xlm-roberta / e5-large)"]:::model
-        Pairs --> CE
-        CE --> |Forward Pass| Logits
-        Logits --> |Sigmoid| T_Scores["Teacher Scores<br/>(Soft Labels)"]:::data
+    %% Teacher Model
+    subgraph Teacher [Teacher Model Cross-Encoder]
+        direction TB
+        T_Input["Concat Input (q, d)"]:::process
+        T_Encoder["Teacher Transformer (Frozen)"]:::model
+        T_Head["Classification Head"]:::model
+        T_Sigmoid["Sigmoid Activation"]:::process
+        T_Scores["Teacher Scores"]:::data
+        
+        BatchData -- Pairs --> T_Input
+        T_Input --> T_Encoder
+        T_Encoder --> T_Head
+        T_Head --> T_Sigmoid
+        T_Sigmoid --> T_Scores
     end
 
-    %% Student Model (Bi-Encoder)
-    subgraph Student_Branch [Student: Bi-Encoder]
-        BE["Bi-Encoder Model<br/>(e.g., embeddinggemma-300m)"]:::model
-        Q --> |Tokenize| Q_Tok["Query Tokens"]
-        Docs --> |Tokenize| D_Tok["Doc Tokens"]
+    %% Student Model
+    subgraph Student [Student Model Bi-Encoder]
+        direction TB
+        S_Q_Input["Query Input (q)"]:::process
+        S_D_Input["Doc Input (d)"]:::process
+        S_Encoder["Student Transformer (Trainable)"]:::model
         
-        Q_Tok --> BE
-        D_Tok --> BE
+        S_Q_Emb["Query Embedding"]:::data
+        S_D_Emb["Doc Embedding"]:::data
         
-        BE --> |Pooling| Q_Emb["Query Embedding"]:::data
-        BE --> |Pooling| D_Emb["Doc Embeddings"]:::data
+        S_CosSim["Cosine Similarity"]:::process
+        S_Norm["Normalization"]:::process
+        S_Scores["Student Scores"]:::data
+
+        BatchData -- Query --> S_Q_Input
+        BatchData -- Docs --> S_D_Input
         
-        Q_Emb & D_Emb --> CosSim["Cosine Similarity"]:::process
-        CosSim --> S_Scores["Student Scores"]:::data
+        S_Q_Input --> S_Encoder
+        S_D_Input --> S_Encoder
+        
+        S_Encoder --> S_Q_Emb
+        S_Encoder --> S_D_Emb
+        
+        S_Q_Emb --> S_CosSim
+        S_D_Emb --> S_CosSim
+        S_CosSim --> S_Norm
+        S_Norm --> S_Scores
     end
 
-    %% Loss Calculation
-    subgraph Loss_Function [Loss Calculation]
-        T_Scores & S_Scores --> KL["KL Divergence Loss<br/>(Distill Knowledge)"]:::loss
-        
-        S_Scores --> Contrastive["Contrastive Loss<br/>(Margin between Pos/Neg)"]:::loss
-        
-        S_Scores --> NegPenalty["Negative Penalty<br/>(Suppress High Neg Scores)"]:::loss
-        
-        KL & Contrastive & NegPenalty --> TotalLoss["Total Loss"]:::loss
+    %% Loss
+    subgraph Loss [Loss Calculation]
+        direction TB
+        KL_Loss["KL Divergence Loss"]:::loss
+        Contrastive_Loss["Contrastive Loss"]:::loss
+        Neg_Penalty["Negative Penalty"]:::loss
+        Total_Loss["Total Loss"]:::loss
     end
 
-    TotalLoss --> |Backprop| BE
+    T_Scores --> KL_Loss
+    S_Scores --> KL_Loss
+    
+    T_Scores --> Contrastive_Loss
+    S_Scores --> Contrastive_Loss
+    S_Scores --> Neg_Penalty
+    
+    KL_Loss --> Total_Loss
+    Contrastive_Loss --> Total_Loss
+    Neg_Penalty --> Total_Loss
 ```
+
 ## 개요
 Cross-Encoder Teacher의 지식을 Bi-Encoder Student에게 전달하는 지식 증류 시스템
 - **1단계**: Cross-Encoder Teacher 학습 (관련성 점수 학습)
